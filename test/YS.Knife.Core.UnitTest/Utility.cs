@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AspectCore.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,15 +15,16 @@ namespace YS.Knife
         {
             return BuildProvider(new Dictionary<string, string>(), config);
         }
+
         public static IServiceProvider BuildProvider(IDictionary<string, string> configurationValues, Action<IServiceCollection, IConfiguration> config = null)
         {
             var services = new ServiceCollection();
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationValues).Build();
-            config?.Invoke(services, configuration);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
             services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-            return services.RegisterKnifeServices(configuration).BuildServiceProvider();
+            config?.Invoke(services, configuration);
+            return services.RegisterKnifeServices(configuration).BuildDynamicProxyProvider();
         }
 
         public static IHost BuildHost()
